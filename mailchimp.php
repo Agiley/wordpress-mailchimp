@@ -486,6 +486,7 @@ function mailchimpSF_reset_list_settings() {
 
 	delete_option('mc_header_content');
 	delete_option('mc_subheader_content');
+	delete_option('mc_custom_confirmation_message');
 	delete_option('mc_submit_text');
 
 	delete_option('mc_custom_style');
@@ -539,7 +540,7 @@ function mailchimpSF_set_form_defaults($list_name = '') {
 	update_option('mc_use_javascript','on');
 	update_option('mc_use_stylesheets','on');
 	update_option('mc_use_unsub_link','off');
-	update_option('mc_use_unsub_link','on');
+	update_option('mc_use_double_optin','on');
 	update_option('mc_header_border_width','1');
 	update_option('mc_header_border_color','E3E3E3');
 	update_option('mc_header_background','FFFFFF');
@@ -624,7 +625,10 @@ function mailchimpSF_save_general_form_settings() {
 	$content = stripslashes($_POST['mc_subheader_content']);
 	$content = str_replace("\r\n","<br/>", $content);
 	update_option('mc_subheader_content', $content );
-
+	
+	$content = stripslashes($_POST['mc_custom_confirmation_message']);
+	$content = str_replace("\r\n","<br/>", $content);
+	update_option('mc_custom_confirmation_message', $content );
 
 	$submit_text = stripslashes($_POST['mc_submit_text']);
 	$submit_text = str_replace("\r\n","", $submit_text);
@@ -985,7 +989,7 @@ if (get_option('mc_list_id') == '') return;
     </td>
     </tr>
     
-    <tr valign="top">
+  <tr valign="top">
 	<th scope="row"><?php esc_html_e('Header content', 'mailchimp_i18n'); ?>:</th>
 	<td>
 	<textarea name="mc_header_content" rows="2" cols="50"><?php echo esc_html(get_option('mc_header_content')); ?></textarea><br/>
@@ -993,7 +997,7 @@ if (get_option('mc_list_id') == '') return;
 	</td>
 	</tr>
 
-    <tr valign="top">
+  <tr valign="top">
 	<th scope="row"><?php esc_html_e('Sub-header content', 'mailchimp_i18n'); ?>:</th>
 	<td>
 	<textarea name="mc_subheader_content" rows="2" cols="50"><?php echo esc_html(get_option('mc_subheader_content')); ?></textarea><br/>
@@ -1009,7 +1013,15 @@ if (get_option('mc_list_id') == '') return;
 	<input type="text" name="mc_submit_text" size="30" value="<?php echo esc_attr(get_option('mc_submit_text')); ?>"/>
 	</td>
 	</tr>
-
+	
+	<tr valign="top">
+	<th scope="row"><?php esc_html_e('Custom Confirmation message', 'mailchimp_i18n'); ?>:</th>
+	<td>
+	<textarea name="mc_custom_confirmation_message" rows="2" cols="50"><?php echo esc_html(get_option('mc_custom_confirmation_message')); ?></textarea><br/>
+	<em><?php esc_html_e('If you want to display a custom confirmation message (when someone subscribes), enter it here.', 'mailchimp_i18n'); ?></em>
+	</td>
+	</tr>
+	
 	<tr valign="top">
 	<th scope="row"><?php esc_html_e('Custom Styling', 'mailchimp_i18n'); ?>:</th>
 	<td>
@@ -1399,7 +1411,10 @@ function mailchimpSF_signup_submit() {
 		$msg .= '</span>';
 	}
 	else {
-		$msg = "<strong class='mc_success_msg'>".esc_html(__("Success, you've been signed up! Please look for our confirmation email!", 'mailchimp_i18n'))."</strong>";
+	  $confirmation_message = get_option('mc_custom_confirmation_message');
+	  $confirmation_message = (!empty($confirmation_message)) ? $confirmation_message : __("Success, you've been signed up! Please look for our confirmation email!", 'mailchimp_i18n');
+	  
+		$msg = "<strong class='mc_success_msg'>".esc_html($confirmation_message)."</strong>";
 	}
 
 	// Set our global message
