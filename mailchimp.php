@@ -58,7 +58,7 @@ function mailchimpSF_plugin_init() {
 	$locale = apply_filters( 'plugin_locale', get_locale(), $textdomain);
 	load_textdomain('mailchimp_i18n', MCSF_LANG_DIR.$textdomain.'-'.$locale.'.mo');
 	
-	
+	github_plugin_updater_init();
 
 	// Bring in our appropriate JS and CSS resources
 	mailchimpSF_load_resources();
