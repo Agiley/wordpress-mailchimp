@@ -105,10 +105,12 @@ function mailchimpSF_load_resources() {
 		wp_enqueue_script('datepicker', MCSF_URL.'/js/datepicker.js', array('jquery','jquery-ui-core'));
 	}
 
-	wp_enqueue_style('mailchimpSF_main_css', home_url('?mcsf_action=main_css&ver='.MCSF_VER));
-	wp_enqueue_style('mailchimpSF_ie_css', MCSF_URL.'css/ie.css');
-	global $wp_styles;
-	$wp_styles->add_data( 'mailchimpSF_ie_css', 'conditional', 'IE' );
+  if (get_option('mc_use_stylesheets') == 'on' && !is_admin()) {
+    wp_enqueue_style('mailchimpSF_main_css', home_url('?mcsf_action=main_css&ver='.MCSF_VER));
+  	wp_enqueue_style('mailchimpSF_ie_css', MCSF_URL.'css/ie.css');
+  	global $wp_styles;
+  	$wp_styles->add_data( 'mailchimpSF_ie_css', 'conditional', 'IE' );
+  }
 }
 
 
@@ -440,8 +442,10 @@ function mailchimpSF_delete_setup() {
 	delete_option('mc_user_id');
 	delete_option('mc_rewards');
 	delete_option('mc_use_javascript');
+	delete_option('mc_use_stylesheets');
 	delete_option('mc_use_datepicker');
 	delete_option('mc_use_unsub_link');
+	delete_option('mc_use_double_optin');
 	delete_option('mc_list_id');
 	delete_option('mc_list_name');
 	$igs = get_option('mc_interest_groups');
@@ -475,7 +479,9 @@ function mailchimpSF_reset_list_settings() {
 	delete_option('mc_interest_groups');
 
 	delete_option('mc_use_javascript');
+	delete_option('mc_use_stylesheets');
 	delete_option('mc_use_unsub_link');
+	delete_option('mc_use_double_optin');
 	delete_option('mc_use_datepicker');
 
 	delete_option('mc_header_content');
@@ -531,7 +537,9 @@ function mailchimpSF_set_form_defaults($list_name = '') {
 	update_option('mc_use_datepicker', 'on');
 	update_option('mc_custom_style','on');
 	update_option('mc_use_javascript','on');
+	update_option('mc_use_stylesheets','on');
 	update_option('mc_use_unsub_link','off');
+	update_option('mc_use_unsub_link','on');
 	update_option('mc_header_border_width','1');
 	update_option('mc_header_border_color','E3E3E3');
 	update_option('mc_header_background','FFFFFF');
@@ -558,6 +566,7 @@ function mailchimpSF_save_general_form_settings() {
 		$msg = '<p class="success_msg">'.__('Monkey Rewards turned Off!', 'mailchimp_i18n').'</p>';
 		mailchimpSF_global_msg($msg);
 	}
+	
 	if (isset($_POST['mc_use_javascript'])){
 		update_option('mc_use_javascript', 'on');
 		$msg = '<p class="success_msg">'.__('Fancy Javascript submission turned On!', 'mailchimp_i18n').'</p>';
@@ -565,6 +574,16 @@ function mailchimpSF_save_general_form_settings() {
 	} else if (get_option('mc_use_javascript')!='off') {
 		update_option('mc_use_javascript', 'off');
 		$msg = '<p class="success_msg">'.__('Fancy Javascript submission turned Off!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	}
+	
+	if (isset($_POST['mc_use_stylesheets'])){
+		update_option('mc_use_stylesheets', 'on');
+		$msg = '<p class="success_msg">'.__('Stylesheets turned On!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	} else if (get_option('mc_use_stylesheets')!='off') {
+		update_option('mc_use_stylesheets', 'off');
+		$msg = '<p class="success_msg">'.__('Stylesheets turned Off!', 'mailchimp_i18n').'</p>';
 		mailchimpSF_global_msg($msg);
 	}
 
@@ -585,6 +604,16 @@ function mailchimpSF_save_general_form_settings() {
 	} else if (get_option('mc_use_unsub_link')!='off') {
 		update_option('mc_use_unsub_link', 'off');
 		$msg = '<p class="success_msg">'.__('Unsubscribe link turned Off!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	}
+	
+	if (isset($_POST['mc_use_double_optin'])){
+		update_option('mc_use_double_optin', 'on');
+		$msg = '<p class="success_msg">'.__('Double opt-in turned On!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	} else if (get_option('mc_use_double_optin')!='off') {
+		update_option('mc_use_double_optin', 'off');
+		$msg = '<p class="success_msg">'.__('Double opt-in turned Off!', 'mailchimp_i18n').'</p>';
 		mailchimpSF_global_msg($msg);
 	}
 
@@ -930,6 +959,12 @@ if (get_option('mc_list_id') == '') return;
     <em><label for="mc_use_javascript"><?php esc_html_e('turning this on will use fancy javascript submission and should degrade gracefully for users not using javascript. It is optional and can be turned on or off at any time.', 'mailchimp_i18n'); ?></label></em>
     </td>
     </tr>
+    <tr valign="top">
+    <th scope="row"><?php esc_html_e('Use Stylesheets?', 'mailchimp_i18n'); ?>:</th>
+    <td><input name="mc_use_stylesheets" type="checkbox" <?php checked(get_option('mc_use_stylesheets'), 'on'); ?> id="mc_use_stylesheets" class="code" />
+    <em><label for="mc_use_stylesheets"><?php esc_html_e('turning this on will use the supplied stylesheets to style forms. It is optional and can be turned on or off at any time.', 'mailchimp_i18n'); ?></label></em>
+    </td>
+    </tr>
 	<tr valign="top">
     <th scope="row"><?php esc_html_e('Use Javascript Datepicker?', 'mailchimp_i18n'); ?>:</th>
     <td><input name="mc_use_datepicker" type="checkbox" <?php checked(get_option('mc_use_datepicker'), 'on'); ?> id="mc_use_datepicker" class="code" />
@@ -942,6 +977,14 @@ if (get_option('mc_list_id') == '') return;
     <em><label for="mc_use_unsub_link"><?php esc_html_e('turning this on will add a link to your host unsubscribe form', 'mailchimp_i18n'); ?></label></em>
     </td>
     </tr>
+    
+    <tr valign="top">
+    <th scope="row"><?php esc_html_e('Use Double Opt-in?', 'mailchimp_i18n'); ?>:</th>
+    <td><input name="mc_use_double_optin" type="checkbox"<?php checked(get_option('mc_use_double_optin'), 'on'); ?> id="mc_use_double_optin" class="code" />
+    <em><label for="mc_use_double_optin"><?php esc_html_e('turning this on will use double opt-in for new subscribers', 'mailchimp_i18n'); ?></label></em>
+    </td>
+    </tr>
+    
     <tr valign="top">
 	<th scope="row"><?php esc_html_e('Header content', 'mailchimp_i18n'); ?>:</th>
 	<td>
@@ -1297,7 +1340,10 @@ function mailchimpSF_signup_submit() {
 		}
 		if ($success) {
 			$api = new mailchimpSF_MCAPI(get_option('mc_apikey'));
-			$retval = $api->listSubscribe( $listId, $email, $merge, $email_type);
+			$double_optin = (get_option('mc_apikey') === 'on');
+			
+			$retval = $api->listSubscribe( $listId, $email, $merge, $email_type, $double_optin);
+			
 			if (!$retval) {
 				switch($api->errorCode) {
 					case '105' :
