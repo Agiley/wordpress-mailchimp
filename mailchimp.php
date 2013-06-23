@@ -1,7 +1,7 @@
 <?php
 /*
-Plugin Name: MailChimp
-Plugin URI: http://www.mailchimp.com/plugins/mailchimp-wordpress-plugin/
+Plugin Name: Modified MailChimp
+Plugin URI: https://github.com/Agiley/wordpress-mailchimp
 Description: The MailChimp plugin allows you to quickly and easily add a signup form for your MailChimp list.
 Version: 1.2.14
 Author: MailChimp and Crowd Favorite
@@ -57,10 +57,41 @@ function mailchimpSF_plugin_init() {
 	$textdomain = 'mailchimp_i18n';
 	$locale = apply_filters( 'plugin_locale', get_locale(), $textdomain);
 	load_textdomain('mailchimp_i18n', MCSF_LANG_DIR.$textdomain.'-'.$locale.'.mo');
+	
+	
 
 	// Bring in our appropriate JS and CSS resources
 	mailchimpSF_load_resources();
 }
+
+function github_plugin_updater_init() {
+
+	include_once 'updater.php';
+
+	define( 'WP_GITHUB_FORCE_UPDATE', true );
+
+	if ( is_admin() ) { // note the use of is_admin() to double check that this is happening in the admin
+
+		$config = array(
+			'slug' => plugin_basename( __FILE__ ),
+			'proper_folder_name' => 'mailchimp',
+			'api_url' => 'https://api.github.com/repos/Agiley/wordpress-mailchimp',
+			'raw_url' => 'https://raw.github.com/Agiley/wordpress-mailchimp/master',
+			'github_url' => 'https://github.com/Agiley/wordpress-mailchimp',
+			'zip_url' => 'https://github.com/Agiley/wordpress-mailchimp/archive/master.zip',
+			'sslverify' => true,
+			'requires' => '2.8',
+			'tested' => '3.5.1',
+			'readme' => 'readme.txt',
+			'access_token' => '',
+		);
+
+		new WP_GitHub_Updater( $config );
+
+	}
+
+}
+
 add_action( 'init', 'mailchimpSF_plugin_init' );
 
 
