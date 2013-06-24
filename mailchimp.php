@@ -477,8 +477,10 @@ function mailchimpSF_delete_setup() {
 	delete_option('mc_use_datepicker');
 	delete_option('mc_use_unsub_link');
 	delete_option('mc_use_double_optin');
+	delete_option('mc_send_welcome_email');
 	delete_option('mc_list_id');
 	delete_option('mc_list_name');
+	
 	$igs = get_option('mc_interest_groups');
 	if (is_array($igs)) {
 		foreach ($igs as $ig) {
@@ -486,7 +488,9 @@ function mailchimpSF_delete_setup() {
 			delete_option($opt);
 		}
 	}
+	
 	delete_option('mc_interest_groups');
+	
 	$mv = get_option('mc_merge_vars');
 	if (is_array($mv)){
         foreach($mv as $var){
@@ -494,6 +498,7 @@ function mailchimpSF_delete_setup() {
 	        delete_option($opt);
         }
     }
+	
 	delete_option('mc_merge_vars');
 }
 
@@ -513,6 +518,7 @@ function mailchimpSF_reset_list_settings() {
 	delete_option('mc_use_stylesheets');
 	delete_option('mc_use_unsub_link');
 	delete_option('mc_use_double_optin');
+	delete_option('mc_send_welcome_email');
 	delete_option('mc_use_datepicker');
 
 	delete_option('mc_header_content');
@@ -572,6 +578,8 @@ function mailchimpSF_set_form_defaults($list_name = '') {
 	update_option('mc_use_stylesheets','on');
 	update_option('mc_use_unsub_link','off');
 	update_option('mc_use_double_optin','on');
+	update_option('mc_send_welcome_email','off');
+	
 	update_option('mc_header_border_width','1');
 	update_option('mc_header_border_color','E3E3E3');
 	update_option('mc_header_background','FFFFFF');
@@ -648,7 +656,17 @@ function mailchimpSF_save_general_form_settings() {
 		$msg = '<p class="success_msg">'.__('Double opt-in turned Off!', 'mailchimp_i18n').'</p>';
 		mailchimpSF_global_msg($msg);
 	}
-
+	
+	if (isset($_POST['mc_send_welcome_email'])){
+		update_option('mc_send_welcome_email', 'on');
+		$msg = '<p class="success_msg">'.__('Send Welcome email turned On!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	} else if (get_option('mc_send_welcome_email')!='off') {
+		update_option('mc_send_welcome_email', 'off');
+		$msg = '<p class="success_msg">'.__('Send Welcome email turned Off!', 'mailchimp_i18n').'</p>';
+		mailchimpSF_global_msg($msg);
+	}
+	
 	$content = stripslashes($_POST['mc_header_content']);
 	$content = str_replace("\r\n","<br/>", $content);
 	update_option('mc_header_content', $content );
@@ -1020,6 +1038,13 @@ if (get_option('mc_list_id') == '') return;
     </td>
     </tr>
     
+    <tr valign="top">
+    <th scope="row"><?php esc_html_e('Send welcome e-mail?', 'mailchimp_i18n'); ?>:</th>
+    <td><input name="mc_send_welcome_email" type="checkbox"<?php checked(get_option('mc_send_welcome_email'), 'on'); ?> id="mc_send_welcome_email" class="code" />
+    <em><label for="mc_send_welcome_email"><?php esc_html_e('turning this on will send a welcome email to new subscribers if double opt-in is disabled', 'mailchimp_i18n'); ?></label></em>
+    </td>
+    </tr>
+    
   <tr valign="top">
 	<th scope="row"><?php esc_html_e('Header content', 'mailchimp_i18n'); ?>:</th>
 	<td>
@@ -1382,10 +1407,13 @@ function mailchimpSF_signup_submit() {
 			}
 		}
 		if ($success) {
-			$api = new mailchimpSF_MCAPI(get_option('mc_apikey'));
-			$double_optin = (get_option('mc_apikey') === 'on');
+			$api                  =   new mailchimpSF_MCAPI(get_option('mc_apikey'));
+			$double_optin         =   (get_option('mc_use_double_optin') === 'on');
+			$send_welcome_email   =   (get_option('mc_send_welcome_email') === 'on');
+			$update_existing      =   false;
+			$replace_interests    =   true;
 			
-			$retval = $api->listSubscribe( $listId, $email, $merge, $email_type, $double_optin);
+			$retval               =   $api->listSubscribe($listId, $email, $merge, $email_type, $double_optin, $update_existing, $replace_interests, $send_welcome_email);
 			
 			if (!$retval) {
 				switch($api->errorCode) {
@@ -1401,7 +1429,7 @@ function mailchimpSF_signup_submit() {
 							$uid = $account['user_id'];
 							$username = $account['username'];
 							$eid = base64_encode($email);
-							$msg .= ' ' . sprintf(__('<a href="%s">Click here to update your profile.</a>', 'mailchimp_i18n'), "http://$username.$dc.list-manage.com/subscribe/send-email?u=$uid&id=$listId&e=$eid");
+							//$msg .= ' ' . sprintf(__('<a href="%s">Click here to update your profile.</a>', 'mailchimp_i18n'), "http://$username.$dc.list-manage.com/subscribe/send-email?u=$uid&id=$listId&e=$eid");
 						}
 
 						$errs[] = $msg;
