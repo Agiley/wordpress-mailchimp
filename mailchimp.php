@@ -357,6 +357,8 @@ function mailchimpSF_request_handler() {
 					case 'js':
 					    if (!headers_sent()){ //just in case...
 				            header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT', true, 200);
+				            header("Cache-Control: no-cache, must-revalidate"); //HTTP 1.1
+                    header("Pragma: no-cache"); //HTTP 1.0
 				        }
 					    echo mailchimpSF_global_msg(); // Don't esc_html this, b/c we've already escaped it
 						exit;
