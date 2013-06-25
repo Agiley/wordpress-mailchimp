@@ -341,9 +341,9 @@ function mailchimpSF_request_handler() {
 				break;
 			case 'mc_submit_signup_form':
 				// Validate nonce
-				if (!wp_verify_nonce($_POST['_mc_submit_signup_form_nonce'], 'mc_submit_signup_form')) {
+				/*if (!wp_verify_nonce($_POST['_mc_submit_signup_form_nonce'], 'mc_submit_signup_form')) {
 					wp_die('Cheatin&rsquo; huh?');
-				}
+				}*/
 
 				// Attempt the signup
 				mailchimpSF_signup_submit();
