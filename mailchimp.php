@@ -33,6 +33,13 @@ define('MCSF_CAP_THRESHOLD', 'manage_options');
 // Define our location constants, both MCSF_DIR and MCSF_URL
 mailchimpSF_where_am_i();
 
+add_filter('site_transient_update_plugins', 'mailchimp_remove_update_notification');
+
+function mailchimp_remove_update_notification($value) {
+  unset($value->response[ plugin_basename(__FILE__) ]);
+  return $value;
+}
+
 // Get our MailChimp API class in scope
 if (!class_exists('mailchimpSF_MCAPI')) {
 	require_once('miniMCAPI.class.php');
