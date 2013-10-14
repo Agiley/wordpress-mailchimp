@@ -3,7 +3,7 @@
 Plugin Name: Modified MailChimp
 Plugin URI: https://github.com/Agiley/wordpress-mailchimp
 Description: The MailChimp plugin allows you to quickly and easily add a signup form for your MailChimp list.
-Version: 1.2.15
+Version: 1.5
 Author: MailChimp and Crowd Favorite
 Author URI: http://mailchimp.com/api/
 */
